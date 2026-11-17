@@ -1,35 +1,33 @@
 name: Build Namaz Times App
-
 on:
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
-          distribution: temurin
+          distribution: 'temurin'
           java-version: '17'
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
-          channel: stable
-
-      - name: Install dependencies
+          flutter-version: '3.24.0'
+          channel: 'stable'
+      - name: Unzip project
+        run: |
+          unzip -o "NamazTimes.zip" -d extracted
+          PROJECT_DIR=$(find extracted -name "pubspec.yaml" -exec dirname {} \; | head -n 1)
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          echo "Found: $PROJECT_DIR"
+      - name: Get packages
         run: flutter pub get
-
+        working-directory: ${{ env.PROJECT_DIR }}
       - name: Build APK
         run: flutter build apk --release
-
+        working-directory: ${{ env.PROJECT_DIR }}
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Namaz-Times-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: NamazTimes-APK
+          path: ${{ env.PROJECT_DIR }}/build/app/outputs/flutter-apk/app-release.apk
